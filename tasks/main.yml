@@ -18,14 +18,22 @@
     dest: '{{ sdkman_download_dir }}'
 
 - name: download SDKMAN
-  get_url:
-    url: '{{ sdkman_url }}'
-    dest: '{{ sdkman_download_dir }}/{{ sdkman_redis_filename }}'
-    checksum: 'sha256:{{ sdkman_redis_sha256sum }}'
-    force: no
-    use_proxy: yes
-    validate_certs: yes
-    mode: 'u=rw,go=r'
+  block:
+    - name: attempt download
+      get_url:
+        url: '{{ sdkman_url }}'
+        dest: '{{ sdkman_download_dir }}/{{ sdkman_redis_filename }}'
+        checksum: 'sha256:{{ sdkman_redis_sha256sum }}'
+        force: no
+        use_proxy: yes
+        validate_certs: yes
+        mode: 'u=rw,go=r'
+  rescue:
+    - name: retry download
+      debug:
+        msg: "Retrying download..."
+      retries: 3
+      delay: 5
 
 - name: download SDKMAN native
   get_url:
